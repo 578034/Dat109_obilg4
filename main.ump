@@ -1,0 +1,118 @@
+//fungerer bare med java pga Random
+generate Java;
+
+//pakke no.hvl.dat109
+namespace no.hvl.dat109;
+
+/*
+  Klasse for en terning
+  @author Viet Uy Huynh
+*/
+class Terning
+{
+  //Importere Random-klassen
+  depend java.util.Random;
+  
+  //Variabel som hold på verdien til terningen
+  lazy Integer verdi;
+  
+  //Lager en ny random som blir brukt for å generere tilfeldige tall
+  defaulted Random r = new Random();
+  
+  //Metoden set et tilfeldig tall fra 1 til 6 på verdi-variabelen ved hjelp av Random-klassen
+  void trill(){
+    setVerdi(r.nextInt(6) + 1);
+  }
+}
+
+/*
+  Klasse som definerer en kopp for å holde på (2) terninger
+  @author Viet Uy Huynh
+*/
+class Kopp
+{
+
+  //Variabel som hold på summen til terningene i koppen
+  lazy Integer sum;
+  
+  //Triller alle terningene i koppen og set summen av verdiane som sum
+  void trillTerninger(){
+    int s = 0;
+    
+    for (Terning t : getTerninger()) {
+      t.trill();
+      s = s + t.getVerdi();
+    }
+    
+    setSum(s);
+  }
+  
+  0..1 -> 2 Terning terninger;
+
+}
+
+/*
+  Klasse for Craps spillet
+  @author Viet Uy Huynh
+*/
+class Craps
+{
+  0..1 -> 1 Kopp kopp;
+  
+  //Den korrekte verdien en må få for å vinne
+  immutable Integer rettVerdi = 7; 
+
+  //fjerner "triller -> Triller", altså "event"-navn, for at det skal gå automatisk når en oppretter et Craps objekt
+  
+  state {
+    //Tilstand for når spillet starter, går til Triller-tilstanden
+    Oppstart {
+      entry/{System.out.println("Spillett starter");}
+      //triller
+      -> Triller;
+    }
+    //Tilstand som triller terningene og går til Sjekk-tilstanden
+    Triller {
+      entry/{kopp.trillTerninger();}
+      //sjekkerSum
+      -> Sjekk;
+    }
+    //Tilstand som sjekker om verdien på terningene er 7 eller ikke. Går til "Vunnet" om de er 7, "Tapt" ellers
+    Sjekk {
+      entry/{System.out.println("Verdi på terningene: " + kopp.getSum());}
+      //enVinn
+      [harVunnet()] -> Vunnet;
+      //enTaper
+      [!harVunnet()] -> Tapt;
+    }
+    //Endelig tilstand der en har vunnet
+    final Vunnet {
+      entry/{System.out.println("Du har vunnet");}
+    }
+    //Endelig tilstand der en har tapt
+    final Tapt {
+      entry/{System.out.println("Du har tapt");}
+    }
+  }
+
+  /*
+    Metoden sjekker om en har vunnet eller ikke (koppen sin getSum() metode)
+    @return true om det er 7 (rettVerdi), false ellers
+  */
+  Boolean harVunnet() {
+    return kopp.getSum() == getRettVerdi();
+  }
+
+  public static void main(String [] args) {
+    Terning t1 = new Terning();
+    Terning t2 = new Terning();
+    Kopp kopp = new Kopp(t1, t2);
+    Craps craps = new Craps(kopp);
+    /*
+    craps.triller();
+    craps.sjekkerSum();
+    craps.enVinn();
+    craps.enTaper();
+    */
+  }
+}
